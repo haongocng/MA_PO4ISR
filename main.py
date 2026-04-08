@@ -8,20 +8,20 @@ from agno.models.openai.like import OpenAILike
 from agents import EvalAgent, DetectErrrorAgent, InferReasonAgent, RefinePromptAgent, AugmentAgent, SelectionAgent
 from opt.utils import RetryModel, ndcg, extract_item_list
 
-load_dotenv('.//MA-PO4ISR//.env')
+load_dotenv()
 DEEPINFRA_API_KEY = os.getenv('DEEPINFRA_API_KEY')
 
 original_model = OpenAILike(
-    id="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    id="openai/gpt-4.1-mini",
     api_key=DEEPINFRA_API_KEY,
-    base_url="https://api.deepinfra.com/v1/openai",
+    base_url="https://hello.timelygpt.co.kr/api/v2/chat/bridge/openai",
 )
 
 llm_model = RetryModel(original_model, max_retries=1000, base_delay=1)
 
-data_path = "datapath"
-train_file = f"{data_path}train_50_100cand.json"
-val_file = f"{data_path}valid_100cand.json"
+data_path = "./ALL_dataset//games//processed//"
+train_file = f"{data_path}train_50s_data_processed.json"
+val_file = f"{data_path}valid_data_processed.json"
 
 with open(train_file, 'r') as f:
     train_data = json.load(f)
@@ -34,7 +34,8 @@ config = {
     'batch_size': 16,
     'num_feedbacks': 2,
     'error_size': 16,
-    'addition_sample': 3,
+    'addition_sample': 2,
+    # 'addition_sample': 3,
     'time_steps': 16,
     'explore_param': 2,
     'sample_num': 32,
@@ -72,7 +73,7 @@ for depth in tqdm(range(config['search_depth'])):
     for prompt in beam:
         batch = random.sample(train_data, min(config['batch_size'], len(train_data)))
         error_cases = []
-        with ThreadPoolExecutor(max_workers=100) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             responses = list(executor.map(lambda d: eval_agent.evaluate(prompt, d), batch))
         for data, response in zip(batch, responses):
             if detect_error_agent.detect_error(response, data['target']):
@@ -84,7 +85,7 @@ for depth in tqdm(range(config['search_depth'])):
         except ValueError:
             errors_group = error_cases
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             processed_results = list(executor.map(lambda err: process_error_feedback(prompt, err), errors_group))
         # processed_results = [process_error_feedback(prompt, err) for err in errors_group]
         
@@ -103,7 +104,7 @@ def compute_data_reward(prompt, d, eval_agent):
     return 0
 
 def compute_reward(prompt, data):
-    with ThreadPoolExecutor(max_workers=100) as executor:
+    with ThreadPoolExecutor(max_workers=1) as executor:
         rewards = list(executor.map(lambda d: compute_data_reward(prompt, d, eval_agent), data))
     total_reward = sum(rewards)
     return total_reward / len(data)
