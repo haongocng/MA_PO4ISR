@@ -27,7 +27,7 @@
   # Evaluate
   metrics: ["hit","map","ndcg"]
   # model: "gpt-3.5-turbo"
-  model: "deepseek-ai/DeepSeek-R1-Turbo"
+  model: "gpt-4.1-mini"
   seed: 42
   candidate_size: 20
 
