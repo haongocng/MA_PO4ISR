@@ -20,7 +20,7 @@ class Request:
             try:
                 if json_mode:
                     response = self.openai.chat.completions.create(
-                        model="deepseek-ai/DeepSeek-R1-Turbo",
+                        model="openai/gpt-4.1-mini",
                         messages=message,
                         temperature=0.2,
                         response_format={'type':'json_object'},
@@ -28,7 +28,7 @@ class Request:
                     )
                 else:
                     response = self.openai.chat.completions.create(
-                        model="deepseek-ai/DeepSeek-R1-Turbo",
+                        model="openai/gpt-4.1-mini",
                         messages=message,
                         temperature=0.2,
                     )      

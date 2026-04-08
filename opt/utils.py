@@ -1,7 +1,29 @@
 import random
+import time
 import numpy as np
 import re
 import json
+
+class RetryModel:
+    def __init__(self, model, max_retries=100, base_delay=1):
+        self.model = model
+        self.max_retries = max_retries  
+        self.base_delay = base_delay    
+
+    def response(self, messages):
+        for attempt in range(self.max_retries):
+            try:
+                return self.model.response(messages)
+            except Exception as e:
+                if attempt == self.max_retries - 1:
+                    raise
+                delay = self.base_delay * (2 ** attempt) + random.uniform(0, 1)
+                print(f"Error: {e}. Retrying in {round(delay, 2)} seconds.")
+                time.sleep(delay)
+        raise Exception("Max retries exceeded")
+
+    def __getattr__(self, name):
+        return getattr(self.model, name)
 
 def extract_item_json_list(response,target):
     try:
@@ -60,8 +82,3 @@ def extract_item_list(response, target):
     except:
         result_list = []
     return result_list
-
-
-
-
-

@@ -8,7 +8,7 @@ def parse_args():
                         help='how the reward is calculated, options: ndcg')
     parser.add_argument('--model', 
                         type=str,
-                        default='deepseek-ai/DeepSeek-R1-Turbo',
+                        default='gpt4',
                         help='the name of model LLM')
     parser.add_argument('--seed', 
                         type=int,
@@ -20,7 +20,7 @@ def parse_args():
                         help='options: 10, 20')
     parser.add_argument('--dataset', 
                         type=str,
-                        default='bundle',
+                        default='ml-1m',
                         help='use which datset: bundle/games/ml-1m')
     parser.add_argument('--train_num', 
                         type=int,
