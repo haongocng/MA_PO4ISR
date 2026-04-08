@@ -16,16 +16,22 @@ class EvalAgent(Agent):
     def evaluate(self,prompt,session_data):
         input_str = session_data['input']
         full_prompt = f"{prompt}\n{input_str}"
+        # print("- Full prompt:\n",full_prompt)
         response = self.run(full_prompt).content
         return response
 
 class DetectErrrorAgent:
     def detect_error(self, response, target):
         result_list = extract_item_list(response, target)
+        # print("Detect error processing: ")
+        # print("- Response: ", response)
+        # print("- Target: ", target)
+        # print("- Result: ", result_list)
         if not result_list:
             return True
         threshold = 10
         rank = int(result_list[-1])
+        # print("- Rank: ", rank)
         return rank >= threshold
 
 class InferReasonAgent(Agent):
@@ -43,17 +49,21 @@ class InferReasonAgent(Agent):
             "give $num_feedbacks$ reasons why the prompt could have gotten this example wrong.\n"\
             "Wrap each reason with <START> and <END>"
         ).replace("$prompt$", prompt).replace("$error_case$", error_input).replace("$num_feedbacks$", str(num_feedbacks))
-        for attempt in range(3): 
+        # reasons = self.run(reason_prompt).content
+        for attempt in range(3):  # Thử lại tối đa 3 lần
             response = self.run(reason_prompt)
             if response is not None and hasattr(response, 'content') and response.content is not None:
                 reasons = response.content
+                # print("Reasons: ",reasons)
                 break
             print(f"Attempt {attempt + 1}: Failed to get reasons, retrying...")
         extract_reasons = extract_edit_prompt(reasons)
+        # print("Len extract reasons: ",len(extract_reasons))
         if len(extract_reasons) == 0:
             reasons = reasons
         else:
             reasons = extract_reasons
+        # print("- Reasons: ", reasons)
         return reasons
 
 class RefinePromptAgent(Agent):
@@ -77,8 +87,10 @@ class RefinePromptAgent(Agent):
         extract_refined_prompts = extract_edit_prompt(refined_prompt)
         if extract_refined_prompts:
             refined_prompt = extract_refined_prompts[0]  
+            # print("- Refined prompt 1 : ", refined_prompt)
             return refined_prompt
         else:
+            # print("- Refined prompt 2 : ", refined_prompt)
             return refined_prompt
 
 class AugmentAgent(Agent):
@@ -95,6 +107,8 @@ class AugmentAgent(Agent):
             "Output:"
         ).replace("$refined_prompt$", refined_prompt)
         augmented_prompts = [self.run(augment_prompt).content for _ in range(additional_sample)]
+        # print("- augmented_prompts: ", augmented_prompts)
+        # print("Len augmented prompts: ", len(augmented_prompts))
         return augmented_prompts
 
 class SelectionAgent(Agent):
